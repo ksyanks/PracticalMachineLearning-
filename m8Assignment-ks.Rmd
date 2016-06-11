@@ -1,0 +1,102 @@
+---
+title: "Practical Machine Learning Assignment"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Summary
+People regularly quantify how much activity they do, but they rarely quantify how well they do it. In this project, the goal is to analyze data from accelerometers on the belt, forearm, arm, and dumbell of six participants. They were asked to perform barbell lifts correctly and incorrectly in five different ways. ar
+
+The goal of this machine learning exercise is to predict the manner in which the participants did the exercise, that is to predict the "classe" variable found in the training dataset. The prediction model will then  used to predict 20 different test cases.
+
+
+##Data Processing and Analysis
+Loading the required libraries and reading in the training and testing datasets, assign missing values to values that are 'NA' or blank.
+```{r}
+set.seed(1)
+```
+
+```{r echo=FALSE}
+setwd("C:/myFile/coursera/m8/project")
+
+```
+
+```{r}
+
+datTraining<-read.csv("pml-training.csv", header=TRUE, na.strings=c("NA", ""))
+datTesting<-read.csv("pml-testing.csv", header=TRUE, na.string=c("NA", ""))
+
+```
+
+##Data Cleaning
+Excluding data with "NA" and delete additional unnecessary columns 
+
+```{r}
+library(caret)
+        
+datTrainNoNA<-datTraining[, apply(datTraining, 2, function(x) !any(is.na(x)))] 
+dim(datTrainNoNA)
+
+datTrainingClean<-datTrainNoNA[,-c(1:8)]
+dim(datTrainingClean)
+
+datTrainNzv <- nearZeroVar(datTrainingClean, saveMetrics=TRUE)
+datTrainingCleanNew <- datTrainingClean[,datTrainNzv$nzv==FALSE]
+dim(datTrainingCleanNew)
+
+```
+
+##Data Partitioning and Prediction Process
+Split the clean training dataset into a training dataset (70% of the observations) and a validation dataset (30% of the observations). This validation dataset is use to perform cross validation when developing the model.
+
+```{r}
+inTrainingData<-createDataPartition(y=datTrainingCleanNew$classe, p=0.70,list=FALSE)
+myTrainData <- datTrainingCleanNew[inTrainingData,]
+dim(myTrainData)
+
+myTestData <- datTrainingClean[-inTrainingData,] 
+dim(myTestData)
+```
+
+##Prediction Model
+Prediction with Random Forests
+```{r}
+
+library(randomForest)
+
+fitControl <- trainControl(method="cv", number=5, allowParallel=T, verbose=T)
+rfModel<-train(classe~.,data=myTrainData, method="rf", trControl=fitControl, verbose=F)
+print(rfModel)
+
+```
+
+#Evaluate the Model
+Using confusionMatrix to evaluate the model
+```{r}
+predrf<-predict(rfModel, myTestData)
+confusionMatrix(predrf, myTestData$classe)
+```
+
+```{r}
+varImpPlot(rfModel$finalModel)
+```
+
+X-axis is the degree of importance axis. This plot shows the degree of importance of each of the principal components 
+
+
+# Result of the prediction to test dataset
+The accuracy is 99%, thus the predicted accuracy for the out of sample error is 1%. Random Forests is chosen
+because it produce better results. 
+```{r}
+predictpmlTesting<-predict(rfModel, datTesting)
+
+#Output for the prediction of the 20 cases provided
+predictpmlTesting
+```
+20/20 cases we correctly predicted
+
+
+
