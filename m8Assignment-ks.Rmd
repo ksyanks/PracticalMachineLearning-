@@ -1,6 +1,6 @@
 ---
 title: "Practical Machine Learning Assignment"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -46,7 +46,7 @@ dim(datTrainingClean)
 datTrainNzv <- nearZeroVar(datTrainingClean, saveMetrics=TRUE)
 datTrainingCleanNew <- datTrainingClean[,datTrainNzv$nzv==FALSE]
 dim(datTrainingCleanNew)
-
+barplot(table(datTrainingCleanNew$classe),ylab="count",xlab="classes",col="green",main="count by classes")
 ```
 
 ##Data Partitioning and Prediction Process
@@ -73,18 +73,12 @@ print(rfModel)
 
 ```
 
-#Evaluate the Model
-Using confusionMatrix to evaluate the model
+#Validate the Model
+Using confusionMatrix to evaluate and cross validate the model
 ```{r}
 predrf<-predict(rfModel, myTestData)
 confusionMatrix(predrf, myTestData$classe)
 ```
-
-```{r}
-varImpPlot(rfModel$finalModel)
-```
-
-X-axis is the degree of importance axis. This plot shows the degree of importance of each of the principal components 
 
 
 # Result of the prediction to test dataset
@@ -96,7 +90,7 @@ predictpmlTesting<-predict(rfModel, datTesting)
 #Output for the prediction of the 20 cases provided
 predictpmlTesting
 ```
-20/20 cases we correctly predicted
+20/20 cases from the quiz were correctly predicted
 
 
 
